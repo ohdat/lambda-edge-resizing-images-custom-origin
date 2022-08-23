@@ -53,12 +53,12 @@ exports.handler = (event, context, callback) => {
         try {
           // Generate a response with resized image
           resizeImage(binary,width)
-            .then(({format,buffer}) => {
+            .then(({format,buffer,size}) => {
               const base64String = buffer.toString('base64');
               console.log("Length of response :%s", base64String.length);
-              if (base64String.length > 1048576) {
+              if (base64String.length >(1048576 +size))  {
                 //Resized filesize payload is greater than 1 MB.Returning original image
-                console.error('Resized filesize payload is greater than 1 MB.Returning original image');
+                console.error('Resized filesize payload is greater than (original.size+1MB) .Returning original image');
                 callback(null, request);
                 return;
               }
@@ -92,21 +92,21 @@ exports.handler = (event, context, callback) => {
   })
   req.end()
 }
-async function resizeImage(file,size=0) {
+async function resizeImage(file,mwidth=0) {
 
   const image = Sharp(file)
-  const {format,width} = await image.metadata()
-  if ( size == 0 || size > width) {
-    size = width;
+  const {format,width,size} = await image.metadata()
+  if ( mwidth == 0 || mwidth > width) {
+    mwidth = width;
   } 
-  const logoSize = parseInt(size/4)
+  const logoSize = parseInt(mwidth/4)
   const logo = await Sharp('./logo.png').resize(logoSize).toBuffer()
-  const buffer =  await image.resize(size).composite([
+  const buffer =  await image.resize(mwidth).composite([
       { input: logo, gravity: 'center'},
       { input: logo, gravity: 'northwest' },
       { input: logo, gravity: 'southeast' },
   ]).toBuffer()
   return {
-      format,buffer
+      format,buffer,size
   }
 }
