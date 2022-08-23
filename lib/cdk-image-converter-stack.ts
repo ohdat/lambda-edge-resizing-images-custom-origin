@@ -4,6 +4,7 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
+import * as acm from '@aws-cdk/aws-certificatemanager';
 
 export class CdkImageConverterStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -50,6 +51,13 @@ export class CdkImageConverterStack extends Stack {
           },
         ],
       },
+      certificate: acm.Certificate.fromCertificateArn(
+        this,
+        'customDomainCertificate',
+        'arn:aws:acm:us-east-1:817125222256:certificate/5b17965c-0096-4b93-b3dc-3b78f7f367ce'
+      ),
+      domainNames: ['images.ohdat.io'],
+      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
     });
   }
 }
