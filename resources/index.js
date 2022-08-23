@@ -11,13 +11,15 @@ exports.handler = (event, context, callback) => {
   const originname = request.origin.custom.domainName;
   var resizingOptions = {};
   const params = new URLSearchParams(request.querystring);
-  if (!params.has('width') || !params.has('format')) {
-    // if there is no width parameter, just pass the request
-    console.log("no params");
-    callback(null, request);
-    return;
+  // if (!params.has('width')) {
+  //   // if there is no width parameter, just pass the request
+  //   console.log("no params");
+  //   callback(null, request);
+  //   return;
+  // }
+   if (params.has('width')){
+    resizingOptions.width = parseInt(params.get('width'));
   }
-  resizingOptions.width = parseInt(params.get('width'));
 
   const options = {
     hostname: originname,
@@ -30,7 +32,6 @@ exports.handler = (event, context, callback) => {
   const req = https.request(options, function (res) {
     console.log(`statusCode: ${res.statusCode}`)
     console.log(options);
-    console.log(params.get('format'));
     let chunks = [];
     res
       .on('data', (chunk) => {
@@ -38,7 +39,8 @@ exports.handler = (event, context, callback) => {
       })
       .on('end', () => {
         // Check the state code is 200 and file extension is jpg
-        if (res.statusCode !== 200 || !request.uri.endsWith('\.jpg')) {
+        if (res.statusCode !== 200 ) {
+          // || !request.uri.endsWith('\.jpg')) {
           req.destroy();
           callback(null, request);
           return;
@@ -47,8 +49,8 @@ exports.handler = (event, context, callback) => {
         try {
           // Generate a response with resized image
           Sharp(binary)
+            .composite([{ input: './logo.png', gravity: 'center' }])
             .resize(resizingOptions)
-            .toFormat(params.get('format'))
             .toBuffer()
             .then(output => {
               const base64String = output.toString('base64');
@@ -67,16 +69,18 @@ exports.handler = (event, context, callback) => {
                   'cache-control': [{
                     key: 'Cache-Control',
                     value: 'max-age=86400'
-                  }],
-                  'content-type': [{
-                    key: 'Content-Type',
-                    value: 'image/' + params.get('format')
                   }]
+                  // 'content-type': [{
+                  //   key: 'Content-Type',
+                  //   value: 'image/' + params.get('format')
+                  // }]
                 },
                 bodyEncoding: 'base64',
                 body: base64String
               };
-
+              console.log("request");
+              console.log("request-string",JSON.stringify(request));
+              console.log("request-json",request);
               callback(null, response);
             });
         } catch (err) {
