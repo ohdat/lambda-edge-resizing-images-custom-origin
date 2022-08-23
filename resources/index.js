@@ -93,8 +93,8 @@ async function resizeImage(file,size=0) {
   if ( size == 0){
     size = width;
   }
-
-  const logo = await Sharp('./logo.png').resize(size/4).toBuffer()
+  const logoSize = parseInt(size/4)
+  const logo = await Sharp('./logo.png').resize(logoSize).toBuffer()
   const buffer =  await image.resize(size).composite([
       { input: logo, gravity: 'center'},
       { input: logo, gravity: 'northwest' },
