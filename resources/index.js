@@ -17,9 +17,7 @@ exports.handler = (event, context, callback) => {
   //   callback(null, request);
   //   return;
   // }
-   if (params.has('width')){
-    resizingOptions.width = parseInt(params.get('width'));
-  }
+  const width = parseInt(params.get('width'));
 
   const options = {
     hostname: originname,
@@ -48,12 +46,9 @@ exports.handler = (event, context, callback) => {
         const binary = Buffer.concat(chunks);
         try {
           // Generate a response with resized image
-          Sharp(binary)
-            .composite([{ input: './logo.png', gravity: 'center' }])
-            .resize(resizingOptions)
-            .toBuffer()
-            .then(output => {
-              const base64String = output.toString('base64');
+          resizeImage(binary,width)
+            .then(({format,buffer}) => {
+              const base64String = buffer.toString('base64');
               console.log("Length of response :%s", base64String.length);
               if (base64String.length > 1048576) {
                 //Resized filesize payload is greater than 1 MB.Returning original image
@@ -69,18 +64,15 @@ exports.handler = (event, context, callback) => {
                   'cache-control': [{
                     key: 'Cache-Control',
                     value: 'max-age=86400'
+                  }],
+                  'content-type': [{
+                    key: 'Content-Type',
+                    value: 'image/' + format
                   }]
-                  // 'content-type': [{
-                  //   key: 'Content-Type',
-                  //   value: 'image/' + params.get('format')
-                  // }]
                 },
                 bodyEncoding: 'base64',
                 body: base64String
               };
-              console.log("request");
-              console.log("request-string",JSON.stringify(request));
-              console.log("request-json",request);
               callback(null, response);
             });
         } catch (err) {
@@ -93,4 +85,22 @@ exports.handler = (event, context, callback) => {
       });
   })
   req.end()
+}
+async function resizeImage(file,size=0) {
+
+  const image = sharp(file)
+  const {format,width} = await image.metadata()
+  if ( size == 0){
+    size = width;
+  }
+
+  const logo = await sharp('./logo.png').resize(size/4).toBuffer()
+  const buffer =  await image.resize(size).composite([
+      { input: logo, gravity: 'center'},
+      { input: logo, gravity: 'northwest' },
+      { input: logo, gravity: 'southeast' },
+  ]).toBuffer()
+  return {
+      format,buffer
+  }
 }

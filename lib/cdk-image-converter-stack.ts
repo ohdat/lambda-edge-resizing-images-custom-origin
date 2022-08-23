@@ -31,7 +31,7 @@ export class CdkImageConverterStack extends Stack {
     const myCachePolicy = new cloudfront.CachePolicy(this, 'myCachePolicy', {
       cachePolicyName: 'ImageConvert',
       comment: 'Cache Policy for Image-convert',
-      queryStringBehavior: cloudfront.CacheQueryStringBehavior.allowList('width', 'format'),
+      queryStringBehavior: cloudfront.CacheQueryStringBehavior.allowList('width'),
       defaultTtl: Duration.days(30),
       minTtl: Duration.days(1),
     });
