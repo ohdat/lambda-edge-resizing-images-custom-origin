@@ -88,13 +88,13 @@ exports.handler = (event, context, callback) => {
 }
 async function resizeImage(file,size=0) {
 
-  const image = sharp(file)
+  const image = Sharp(file)
   const {format,width} = await image.metadata()
   if ( size == 0){
     size = width;
   }
 
-  const logo = await sharp('./logo.png').resize(size/4).toBuffer()
+  const logo = await Sharp('./logo.png').resize(size/4).toBuffer()
   const buffer =  await image.resize(size).composite([
       { input: logo, gravity: 'center'},
       { input: logo, gravity: 'northwest' },
