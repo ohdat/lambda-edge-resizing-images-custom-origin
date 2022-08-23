@@ -17,7 +17,13 @@ exports.handler = (event, context, callback) => {
   //   callback(null, request);
   //   return;
   // }
-  const width = parseInt(params.get('width'));
+  let width = 0;
+  if (params.has('width')) {
+     width = parseInt(params.get('width'));
+     if (isNaN(width)) {
+       width = 0;
+     }
+  }
 
   const options = {
     hostname: originname,
@@ -90,9 +96,9 @@ async function resizeImage(file,size=0) {
 
   const image = Sharp(file)
   const {format,width} = await image.metadata()
-  if ( size == 0){
+  if ( size == 0 || size > width) {
     size = width;
-  }
+  } 
   const logoSize = parseInt(size/4)
   const logo = await Sharp('./logo.png').resize(logoSize).toBuffer()
   const buffer =  await image.resize(size).composite([
