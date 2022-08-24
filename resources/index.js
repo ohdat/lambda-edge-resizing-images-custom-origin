@@ -99,6 +99,9 @@ async function resizeImage(file,mwidth=0) {
   if ( mwidth == 0 || mwidth > width) {
     mwidth = width;
   } 
+  if ( mwidth > 2000) {
+    mwidth = 2000;
+  }
   const logoSize = parseInt(mwidth/4)
   const logo = await Sharp('./logo.png').resize(logoSize).toBuffer()
   const buffer =  await image.resize(mwidth).composite([
